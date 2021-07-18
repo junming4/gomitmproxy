@@ -22,8 +22,8 @@ import (
 var errClientCertRequested = errors.New("tls: client cert authentication unsupported")
 
 const defaultTimeout = 5 * time.Minute
-const dialTimeout = 30 * time.Second
-const tlsHandshakeTimeout = 600 * time.Second
+const dialTimeout = 60 * time.Second
+const tlsHandshakeTimeout = 30 * time.Second
 
 // Proxy is a structure with the proxy server configuration and current state
 type Proxy struct {

@@ -474,7 +474,7 @@ func (p *Proxy) handleConnect(session *Session) error {
 			// Handshake with the local client
 			if err := tlsConn.Handshake(); err != nil {
 				// TODO: Consider adding to invalidTLSHosts? -- we should do this if this happens a couple of times in a short period of time
-				log.Error("id=%s: failed to handshake with the client: %v", session.ID(), err)
+				//log.Error("id=%s: failed to handshake with the client: %v", session.ID(), err)
 				return err
 			}
 

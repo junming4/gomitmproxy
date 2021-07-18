@@ -5,7 +5,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/AdguardTeam/gomitmproxy/mitm"
+	"github.com/junming4/gomitmproxy/mitm"
 )
 
 // Config is the configuration of the Proxy

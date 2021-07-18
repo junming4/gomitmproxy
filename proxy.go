@@ -451,7 +451,7 @@ func (p *Proxy) handleConnect(session *Session) error {
 
 		b := make([]byte, 1)
 		if _, err := session.ctx.localRW.Read(b); err != nil {
-			log.Error("id=%s: error peeking message through CONNECT tunnel to determine type: %v", session.ID(), err)
+			//log.Error("id=%s: error peeking message through CONNECT tunnel to determine type: %v", session.ID(), err)
 			return err
 		}
 

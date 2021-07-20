@@ -21,9 +21,9 @@ import (
 
 var errClientCertRequested = errors.New("tls: client cert authentication unsupported")
 
-const defaultTimeout = 30 * time.Minute
+const defaultTimeout = 5 * time.Minute
 const dialTimeout = 360 * time.Second
-const tlsHandshakeTimeout = 360 * time.Second
+const tlsHandshakeTimeout = 10 * time.Second
 
 // Proxy is a structure with the proxy server configuration and current state
 type Proxy struct {
@@ -138,7 +138,7 @@ func (p *Proxy) Serve(l net.Listener) {
 func (p *Proxy) Close() {
 	log.Printf("Closing proxy")
 
-	p.listener.Close()
+	_ = p.listener.Close()
 	// This will prevent waiting for the proxy.timeout until an incoming request is read
 	close(p.closing)
 
@@ -267,7 +267,7 @@ func (p *Proxy) handleRequest(ctx *Context) error {
 		// nolint:bodyclose
 		res, err := p.transport.RoundTrip(session.req)
 		if err != nil {
-			log.Error("id=%s: failed to round trip: %v", session.ID(), err)
+			log.Printf("id=%s: failed to round trip: %v", session.ID(), err)
 			p.raiseOnError(session, err)
 			// res body is closed below (see session.res.body.Close())
 			// nolint:bodyclose

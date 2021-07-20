@@ -21,9 +21,9 @@ import (
 
 var errClientCertRequested = errors.New("tls: client cert authentication unsupported")
 
-const defaultTimeout = 5 * time.Minute
+const defaultTimeout = 10 * time.Minute
 const dialTimeout = 360 * time.Second
-const tlsHandshakeTimeout = 10 * time.Second
+const tlsHandshakeTimeout = 360 * time.Second
 
 // Proxy is a structure with the proxy server configuration and current state
 type Proxy struct {
@@ -168,7 +168,7 @@ func (p *Proxy) serve(l net.Listener) error {
 
 		if tcpConn, ok := conn.(*net.TCPConn); ok {
 			_ = tcpConn.SetKeepAlive(true)
-			_ = tcpConn.SetKeepAlivePeriod(3 * time.Minute)
+			_ = tcpConn.SetKeepAlivePeriod(5 * time.Minute)
 		}
 
 		go p.handleConnection(ctx)

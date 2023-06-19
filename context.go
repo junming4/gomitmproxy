@@ -31,6 +31,8 @@ type Context struct {
 	// props is a map with custom properties that can be used
 	// by gomitmproxy to store context properties
 	props map[string]interface{}
+
+	listenAddr *net.TCPAddr // Address to listen to
 }
 
 // Session contains all the necessary information about
@@ -45,11 +47,12 @@ type Session struct {
 
 	// props is a map with custom properties that can be used
 	// by gomitmproxy to store session properties
-	props map[string]interface{}
+	props      map[string]interface{}
+	listenAddr *net.TCPAddr // Address to listen to
 }
 
 // newContext creates a new Context instance
-func newContext(conn net.Conn, localRW *bufio.ReadWriter, parent *Session) *Context {
+func newContext(conn net.Conn, localRW *bufio.ReadWriter, parent *Session, listenAddr *net.TCPAddr) *Context {
 	var contextID int64
 	if parent == nil {
 		contextID = atomic.AddInt64(&currentContextID, 1)
@@ -58,22 +61,24 @@ func newContext(conn net.Conn, localRW *bufio.ReadWriter, parent *Session) *Cont
 	}
 
 	return &Context{
-		id:      contextID,
-		parent:  parent,
-		conn:    conn,
-		localRW: localRW,
-		props:   map[string]interface{}{},
+		id:         contextID,
+		parent:     parent,
+		conn:       conn,
+		localRW:    localRW,
+		props:      map[string]interface{}{},
+		listenAddr: listenAddr,
 	}
 }
 
 // newSession creates a new Session instance
-func newSession(ctx *Context, req *http.Request) *Session {
+func newSession(ctx *Context, req *http.Request, listenAddr *net.TCPAddr) *Session {
 	sessionID := atomic.AddInt64(&ctx.lastSessionID, 1)
 	return &Session{
-		id:    sessionID,
-		ctx:   ctx,
-		req:   req,
-		props: map[string]interface{}{},
+		id:         sessionID,
+		ctx:        ctx,
+		req:        req,
+		props:      map[string]interface{}{},
+		listenAddr: listenAddr,
 	}
 }
 
@@ -83,6 +88,11 @@ func (c *Context) ID() string {
 		return fmt.Sprintf("%s-%d", c.parent.ID(), c.id)
 	}
 	return fmt.Sprintf("%d", c.id)
+}
+
+// ListenAddr -- 获取监听ID
+func (c *Context) ListenAddr() *net.TCPAddr {
+	return c.listenAddr
 }
 
 // IsMITM returns true if this context is for a MITM'ed connection
@@ -166,4 +176,9 @@ func (s *Session) RemoteAddr() string {
 	}
 
 	return fmt.Sprintf("%s:80", host)
+}
+
+// ListenAddr -- 获取监听ID
+func (s *Session) ListenAddr() *net.TCPAddr {
+	return s.listenAddr
 }

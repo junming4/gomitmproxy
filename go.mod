@@ -1,6 +1,6 @@
 module github.com/junming4/gomitmproxy
 
-go 1.14
+go 1.15
 
 require (
 	github.com/AdguardTeam/golibs v0.4.0

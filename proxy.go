@@ -104,6 +104,7 @@ func (p *Proxy) Closing() bool {
 
 // Start starts the proxy server in a separate goroutine
 func (p *Proxy) Start() error {
+
 	l, err := net.ListenTCP("tcp", p.ListenAddr)
 	if err != nil {
 		return err
@@ -163,7 +164,7 @@ func (p *Proxy) serve(l net.Listener) error {
 		}
 
 		localRW := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
-		ctx := newContext(conn, localRW, nil)
+		ctx := newContext(conn, localRW, nil, p.ListenAddr)
 		log.Debug("id=%s: accepted connection from %s", ctx.ID(), ctx.conn.RemoteAddr())
 
 		if tcpConn, ok := conn.(*net.TCPConn); ok {
@@ -213,7 +214,8 @@ func (p *Proxy) handleRequest(ctx *Context) error {
 	}
 	defer origReq.Body.Close()
 
-	session := newSession(ctx, origReq)
+	session := newSession(ctx, origReq, p.ListenAddr)
+
 	p.prepareRequest(origReq, session)
 	log.Debug("id=%s: handle request %s %s", session.ID(), origReq.Method, origReq.URL.String())
 
@@ -479,13 +481,13 @@ func (p *Proxy) handleConnect(session *Session) error {
 			}
 
 			newLocalRW := bufio.NewReadWriter(bufio.NewReader(tlsConn), bufio.NewWriter(tlsConn))
-			newCtx := newContext(tlsConn, newLocalRW, session)
+			newCtx := newContext(tlsConn, newLocalRW, session, p.ListenAddr)
 			p.handleLoop(newCtx)
 			return errClose
 		}
 
 		newLocalRW := bufio.NewReadWriter(bufio.NewReader(pc), bufio.NewWriter(pc))
-		newCtx := newContext(pc, newLocalRW, session)
+		newCtx := newContext(pc, newLocalRW, session, p.ListenAddr)
 		p.handleLoop(newCtx)
 		return errClose
 	}
@@ -589,11 +591,11 @@ func (p *Proxy) writeResponse(session *Session) error {
 
 // connect opens a network connection to the specified remote address
 // this method can be called in two cases:
-// 1. When the proxy handles the HTTP CONNECT.
-//    IMPORTANT: In this case we don't actually use the remote connections.
-//    It is only used to check if the remote endpoint is available
-// 2. When the proxy bypasses data from the client to the remote endpoint.
-//    For instance, it could happen when there's a WebSocket connection.
+//  1. When the proxy handles the HTTP CONNECT.
+//     IMPORTANT: In this case we don't actually use the remote connections.
+//     It is only used to check if the remote endpoint is available
+//  2. When the proxy bypasses data from the client to the remote endpoint.
+//     For instance, it could happen when there's a WebSocket connection.
 func (p *Proxy) connect(session *Session, proto string, addr string) (net.Conn, error) {
 	log.Debug("id=%s: connecting to %s://%s", session.ID(), proto, addr)
 

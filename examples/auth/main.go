@@ -2,21 +2,36 @@ package main
 
 import (
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/AdguardTeam/golibs/log"
-	"github.com/junming4/gomitmproxy"
+	"github.com/AdguardTeam/gomitmproxy"
 )
 
 func main() {
+	log.SetLevel(log.DEBUG)
+
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
+
+	// Prepare the proxy.
+	addr := &net.TCPAddr{
+		IP:   net.IPv4(0, 0, 0, 0),
+		Port: 3333,
+	}
+
 	proxy := gomitmproxy.NewProxy(gomitmproxy.Config{
-		ListenAddr: &net.TCPAddr{
-			IP:   net.IPv4(0, 0, 0, 0),
-			Port: 8080,
-		},
+		ListenAddr: addr,
+
+		Username: "user",
+		Password: "pass",
+		APIHost:  "gomitmproxy",
 	})
+
 	err := proxy.Start()
 	if err != nil {
 		log.Fatal(err)
@@ -26,6 +41,6 @@ func main() {
 	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
 	<-signalChannel
 
-	// Clean up.
+	// Stop the proxy.
 	proxy.Close()
 }

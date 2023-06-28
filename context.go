@@ -197,3 +197,8 @@ func (s *Session) RemoteAddr() (addr string) {
 func (c *Context) ListenAddr() *net.TCPAddr {
 	return c.listenAddr
 }
+
+// ListenAddr -- 获取监听ID
+func (s *Session) ListenAddr() *net.TCPAddr {
+	return s.listenAddr
+}
